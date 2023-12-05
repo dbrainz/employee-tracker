@@ -17,7 +17,7 @@ function mainLoop() {
         .then( mainChoice => {
             switch (mainChoice.selection) {
                 case 'View All Employees' : 
-                
+
                     break;
                 case 'Add Employee':
 
@@ -41,12 +41,14 @@ function mainLoop() {
                     exitSelected = true;
                     break;
             }
+            if (!exitSelected) { 
+                // Recursively call top menu loop if user did not select to exit
+                mainLoop();
+            }
         })
         .catch( error => {
             console.error(error)
         })
-    if (!exitSelected) mainLoop;
-
 }
 
 mainLoop();
