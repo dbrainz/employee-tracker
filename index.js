@@ -9,7 +9,7 @@ var exitSelected = false;
         user: 'root',
         password: 'password',
         database: 'employees_db'
-    }, console.log("db")
+    }, console.log("Database Connected")
 ) 
 
 const mainMenuChoices = [
@@ -26,10 +26,8 @@ function mainLoop() {
 
     inquirer.prompt(mainMenuChoices)
         .then( mainChoice => {
-            console.log("test")
              switch (mainChoice.selection) {
                 case 'View All Employees' : 
-                    console.log("View All Employees")
                     viewAllEmployees();
                     break;
                 case 'Add Employee':
@@ -39,14 +37,12 @@ function mainLoop() {
                     console.log("Update Employee Role");
                     break;
                 case 'View All Roles':
-                    console.log("View All Roles");
                     viewAllRoles();
                     break;
                 case 'Add Role':
                     console.log("Add Role");
                     break;
                 case 'View All Departments':
-                    console.log("View All Departments");
                     viewAllDepartments();
                     break;
                 case 'Add Department':
@@ -54,7 +50,6 @@ function mainLoop() {
                     break;
                 case 'Quit':
                     console.log("Quit");
-                    exitSelected = true;
                     db.end( (err) => {
                         if (err) {
                             console.error('Error closing MySQL connection:', err)
