@@ -82,6 +82,7 @@ function viewAllRoles() {
 function viewAllEmployees() {
     const employeeQuery = "SELECT employees.id AS 'Id', employees.first_name AS 'First Name', employees.last_name AS 'Last Name', roles.title AS 'Title', departments.name AS 'Department', roles.salary AS 'Salary', CONCAT(managers.first_name, ' ', managers.last_name) AS 'Manager' FROM employees LEFT OUTER JOIN roles ON employees.role_id = roles.id LEFT OUTER JOIN departments ON roles.department_id = departments.id LEFT OUTER JOIN employees AS managers ON employees.manager_id = managers.id"
     db.query(employeeQuery, function (err, results) {
+        console.log("")
         printTable(results)
         mainLoop()
     })
@@ -150,30 +151,56 @@ function addRole() {
 
 function addEmployee() {
     const roleListQuery = "SELECT * FROM roles ORDER BY title ASC"
+    const managerListQuery = "SELECT * FROM employees ORDER BY last_name, first_name"
     db.query(roleListQuery, function (err, results) {
-        const roleList = results.map( (roleObject) => {
-            return { name: roleObject.title, value: roleObject.id}
+        const roleList = results.map( (role) => {
+            return { name: role.title, value: role.id}
         })
-        const employeeQuestions = [
-            {
-                type: 'input',
-                name: 'firstName',
-                message: 'First name : ',
-            },
-            {
-                type: 'input',
-                name: 'lastName',
-                message: 'Last name : '
-            },
-            {
-                type: 'list',
-                name: 'roleId',
-                message: 'Choose role : ',
-                choices: roleList,
-                loop: false
-            }
-        ]
-    }
+        db.query(managerListQuery, function (err, results) {
+            const managerList = results.map( (manager) => {
+                return { name: manager.last_name + ", " + manager.first_name, value: manager.id}
+            })
+            const employeeQuestions = [
+                {
+                    type: 'input',
+                    name: 'firstName',
+                    message: 'First name : ',
+                },
+                {
+                    type: 'input',
+                    name: 'lastName',
+                    message: 'Last name : '
+                },
+                {
+                    type: 'list',
+                    name: 'roleId',
+                    message: 'Choose role : ',
+                    choices: roleList,
+                    loop: false
+                },
+                {
+                    type: 'list',
+                    name: 'managerId',
+                    message: 'Choose manager : ',
+                    choices: managerList,
+                    loop: false
+                }
+            ]
+            inquirer.prompt(employeeQuestions)
+                .then( answers => {
+                    const addEmployeeQuery = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ('${answers.firstName}', '${answers.lastName}', ${answers.roleId}, ${answers.managerId})`
+                    db.query(addEmployeeQuery, function (err, results) {
+                        mainLoop();
+                    })
+
+                    mainLoop();
+                }) 
+                .catch((error) => {
+                    console.error(error);
+                })
+        })
+
+    })
 }
 
 mainLoop();
