@@ -34,7 +34,7 @@ function mainLoop() {
                     addEmployee();
                     break;
                 case 'Update Employee Role':
-                    console.log("Update Employee Role");
+                    updateRole();
                     break;
                 case 'View All Roles':
                     viewAllRoles();
@@ -137,7 +137,7 @@ function addRole() {
             .then( answers => {
                 const addRoleQuery = `INSERT INTO roles (title, salary, department_id) VALUES ('${answers.newRole}', ${answers.salary}, ${answers.departmentName})`
                 db.query(addRoleQuery, function (err, results) {
-                    mainLoop();
+                  //  mainLoop();
                 })
 
                 mainLoop();
@@ -190,7 +190,7 @@ function addEmployee() {
                 .then( answers => {
                     const addEmployeeQuery = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ('${answers.firstName}', '${answers.lastName}', ${answers.roleId}, ${answers.managerId})`
                     db.query(addEmployeeQuery, function (err, results) {
-                        mainLoop();
+                      //  mainLoop();
                     })
 
                     mainLoop();
@@ -200,6 +200,48 @@ function addEmployee() {
                 })
         })
 
+    })
+}
+
+function updateRole() {
+    const employeeQuery = "SELECT * FROM employees ORDER BY last_name, first_name"
+    const roleQuery = "SELECT * FROM roles ORDER BY title"
+    db.query(employeeQuery, function(err, results) {
+        const employeeList = results.map( (employee) => {
+            return { name : employee.last_name + ", " + employee.first_name, value: employee.id}
+        })
+        db.query(roleQuery, function(err, results) {
+            const roleList = results.map( (role) => {
+                return {name: role.title, value: role.id}
+            })
+            const newRoleQuestions = [
+                {
+                    type: 'list',
+                    name: 'employee',
+                    message: 'Select an employee : ',
+                    choices: employeeList,
+                    loop: false
+                },
+                {
+                    type: 'list',
+                    name: 'role',
+                    message: 'Select new role',
+                    choices: roleList,
+                    loop: false
+                }
+            ]
+            inquirer.prompt(newRoleQuestions)
+                .then( answers => {
+                    const updateRoleQuery = `UPDATE employees SET role_id=${answers.role} WHERE id=${answers.employee} `
+                    db.query(updateRoleQuery, function (err, results) {
+                        //mainLoop()
+                    })
+                    mainLoop()
+                })
+                .catch( (error) => {
+                    console.error(error)
+                })
+        })
     })
 }
 
