@@ -31,7 +31,7 @@ function mainLoop() {
                     viewAllEmployees();
                     break;
                 case 'Add Employee':
-                    console.log("Add Employee");
+                    addEmployee();
                     break;
                 case 'Update Employee Role':
                     console.log("Update Employee Role");
@@ -40,7 +40,7 @@ function mainLoop() {
                     viewAllRoles();
                     break;
                 case 'Add Role':
-                    console.log("Add Role");
+                    addRole();
                     break;
                 case 'View All Departments':
                     viewAllDepartments();
@@ -64,7 +64,6 @@ function mainLoop() {
 }
 
 function viewAllDepartments() {
-    console.log("All Departments")
     const departmentQuery = "SELECT id AS 'Id', name AS 'Department Name' FROM departments"
     db.query(departmentQuery, function (err, results) {
         printTable(results)
@@ -73,7 +72,6 @@ function viewAllDepartments() {
 }
 
 function viewAllRoles() {
-    console.log("All Roles")
     const roleQuery = "SELECT roles.id AS 'Id', roles.title AS 'Title', roles.salary AS 'Salary', departments.name AS 'Department' FROM roles LEFT OUTER JOIN departments ON roles.department_id = departments.id"
     db.query(roleQuery, function (err, results) {
         printTable(results)
@@ -82,7 +80,6 @@ function viewAllRoles() {
 }
 
 function viewAllEmployees() {
-    console.log("All Employees")
     const employeeQuery = "SELECT employees.id AS 'Id', employees.first_name AS 'First Name', employees.last_name AS 'Last Name', roles.title AS 'Title', departments.name AS 'Department', roles.salary AS 'Salary', CONCAT(managers.first_name, ' ', managers.last_name) AS 'Manager' FROM employees LEFT OUTER JOIN roles ON employees.role_id = roles.id LEFT OUTER JOIN departments ON roles.department_id = departments.id LEFT OUTER JOIN employees AS managers ON employees.manager_id = managers.id"
     db.query(employeeQuery, function (err, results) {
         printTable(results)
@@ -95,14 +92,12 @@ function addDepartment() {
         {
             type: 'input',
             name: 'newDepartment',
-            message: "Enter department name : "
+            message: 'Enter department name : '
         }
     ]
-    console.log("Add Department")
     inquirer.prompt(deptQuestions)
         .then( answer => {
             const addDepartmentQuery = `INSERT INTO departments (name) VALUES ('${answer.newDepartment}')`
-            console.log(addDepartmentQuery)
             db.query(addDepartmentQuery, function (err, results) {
                 mainLoop();
             })
@@ -111,5 +106,74 @@ function addDepartment() {
             console.error(error)
         })
 }
-mainLoop();
 
+function addRole() {
+    const departmentListQuery = "SELECT * FROM departments ORDER BY id ASC"
+    db.query(departmentListQuery, function (err, results) {
+        const departmentsList = results.map( (departmentObject) => {
+            return { name: departmentObject.name , value : departmentObject.id}
+        })
+        const roleQuestions = [
+            {
+                type: 'input',
+                name: 'newRole',
+                message: 'Enter role name : '
+            }, 
+            {
+                type: 'number',
+                name: 'salary',
+                message: 'Enter annual salary : '
+            },
+            {
+                type: 'list',
+                name: 'departmentName',
+                message: 'Choose department : ',
+                choices: departmentsList,
+                loop: false
+            }
+        ]
+        inquirer.prompt(roleQuestions)
+            .then( answers => {
+                const addRoleQuery = `INSERT INTO roles (title, salary, department_id) VALUES ('${answers.newRole}', ${answers.salary}, ${answers.departmentName})`
+                db.query(addRoleQuery, function (err, results) {
+                    mainLoop();
+                })
+
+                mainLoop();
+            }) 
+            .catch((error) => {
+                console.error(error);
+            })
+
+    })
+}
+
+function addEmployee() {
+    const roleListQuery = "SELECT * FROM roles ORDER BY title ASC"
+    db.query(roleListQuery, function (err, results) {
+        const roleList = results.map( (roleObject) => {
+            return { name: roleObject.title, value: roleObject.id}
+        })
+        const employeeQuestions = [
+            {
+                type: 'input',
+                name: 'firstName',
+                message: 'First name : ',
+            },
+            {
+                type: 'input',
+                name: 'lastName',
+                message: 'Last name : '
+            },
+            {
+                type: 'list',
+                name: 'roleId',
+                message: 'Choose role : ',
+                choices: roleList,
+                loop: false
+            }
+        ]
+    }
+}
+
+mainLoop();
